@@ -1,0 +1,56 @@
+﻿@page "/"
+@inject CustomAuthStateProvider CustomAuthStateProvider 
+
+@using System.Security.Claims 
+
+<AuthorizeView>
+    <Authorized>
+        <h1>Hello, @context.User.Identity.Name!</h1>
+        <p>You can only see this content if you're authenticated.</p>
+        
+        <button @onclick="@(() => LoginAsync())">
+            Login
+        </button>
+        <br />
+        @foreach (Claim c in context.User.Claims)
+        {
+            <span>@c.Type | @c.Value</span><br />
+        }
+    </Authorized>
+    <Authorizing>
+        <h1>Authentication in progress</h1>
+        <p>You can only see this content while authentication is in progress.</p>
+    </Authorizing>
+</AuthorizeView>
+
+<AuthorizeView Roles="impersonator">
+    <Authorized>
+        <button @onclick="@(() => LogoutImpersonatorAsync())">
+            Logout
+        </button>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationStateTask { get; set; }
+
+    private AuthenticationState Auth { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Auth = await AuthenticationStateTask;
+    }
+
+    private async Task LoginAsync()
+    {
+        await CustomAuthStateProvider.LoginAsync("test", "test");
+    }
+
+    private async Task LogoutImpersonatorAsync()
+    {
+        await CustomAuthStateProvider.LogoutImpersonatorAsync();
+    }
+
+} 
